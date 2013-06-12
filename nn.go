@@ -5,7 +5,13 @@ import (
 	"math"
 )
 
-func CostFunction(data [][]*matrix.Matrix, thetas []*matrix.Matrix, lambda float64) float64 {
+type TrainingExample struct {
+	Input, ExpectedOutput *matrix.Matrix
+}
+
+type Parameters []*matrix.Matrix
+
+func CostFunction(data []TrainingExample, thetas Parameters, lambda float64) float64 {
 	cost := float64(0)
 	var estimation []float64
 	var expected_output []float64
@@ -13,10 +19,11 @@ func CostFunction(data [][]*matrix.Matrix, thetas []*matrix.Matrix, lambda float
 	// Cost
 
 	for _, datum := range data {
-		estimation = Hypothesis(thetas, datum[0]).Values()
-		expected_output = datum[1].Values()
+		estimation = Hypothesis(thetas, datum).Values()
+		expected_output = datum.ExpectedOutput.Values()
 
 		for k, y := range expected_output {
+			// heart of the cost function
 			cost += y*math.Log(estimation[k]) + (1-y)*math.Log(1-estimation[k])
 		}
 	}
@@ -26,6 +33,8 @@ func CostFunction(data [][]*matrix.Matrix, thetas []*matrix.Matrix, lambda float
 
 	for _, theta := range thetas {
 		for i, param := range theta.Values() {
+
+			// ignore theta0
 			if i%theta.Columns() == 0 {
 				continue
 			}
@@ -37,9 +46,9 @@ func CostFunction(data [][]*matrix.Matrix, thetas []*matrix.Matrix, lambda float
 	return cost/float64(len(data)) + (lambda/(2*float64(len(data))))*regularizationCost
 }
 
-func Hypothesis(thetas []*matrix.Matrix, input *matrix.Matrix) *matrix.Matrix {
+func Hypothesis(thetas Parameters, trainingEx TrainingExample) *matrix.Matrix {
 	// Describes the current working values (a_1, a_2, ...)
-	curValues := input
+	curValues := trainingEx.Input
 
 	// Is simply a 1 in a 1x1 matrix to b
 	// inserted into a vector as the bias unit
