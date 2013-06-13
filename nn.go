@@ -86,7 +86,6 @@ func DeltaTerms(thetas Parameters, trainingEx TrainingExample) Deltas {
 	}
 
 	return deltas
-
 }
 
 // Helper functions
