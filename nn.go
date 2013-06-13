@@ -1,8 +1,13 @@
 package nn
 
 import (
+	"fmt"
 	"github.com/jcla1/matrix"
 	"math"
+)
+
+var (
+	_ = fmt.Println
 )
 
 type TrainingExample struct {
@@ -10,6 +15,7 @@ type TrainingExample struct {
 }
 
 type Parameters []*matrix.Matrix
+type Deltas []*matrix.Matrix
 
 func CostFunction(data []TrainingExample, thetas Parameters, lambda float64) float64 {
 	cost := float64(0)
@@ -60,6 +66,27 @@ func Hypothesis(thetas Parameters, trainingEx TrainingExample) *matrix.Matrix {
 	}
 
 	return curValues
+}
+
+func DeltaTerms(thetas Parameters, trainingEx TrainingExample) Deltas {
+	deltas := make(Deltas, len(thetas))
+
+	biasValueMatrix := matrix.Ones(1, 1)
+
+	deltas[len(deltas)-1], _ = Hypothesis(thetas, trainingEx).Sub(trainingEx.ExpectedOutput)
+
+	for i := len(deltas) - 2; i >= 0; i-- {
+		workingTheta := thetas[i+1]
+
+		levelPrediction := Hypothesis(thetas[:i+1], trainingEx).InsertRows(biasValueMatrix, 0)
+		tmp, _ := matrix.Ones(levelPrediction.Rows(), 1).Sub(levelPrediction)
+		levelGradient := levelPrediction.Dot(tmp)
+
+		deltas[i] = workingTheta.Transpose().Mul(deltas[i+1]).Dot(levelGradient)
+	}
+
+	return deltas
+
 }
 
 // Helper functions
