@@ -68,6 +68,32 @@ func Hypothesis(thetas Parameters, trainingEx TrainingExample) *matrix.Matrix {
 	return curValues
 }
 
+func HypothesisHistory(thetas Parameters, trainingEx TrainingExample) []*matrix.Matrix {
+	// Describes the current working values (a_1, a_2, ...)
+	curValues := trainingEx.Input
+
+	// Is simply a 1 in a 1x1 matrix to b
+	// inserted into a vector as the bias unit
+	biasValueMatrix := matrix.Ones(1, 1)
+
+	history := make([]*matrix.Matrix, 0, len(thetas)+1)
+	history = append(history, curValues.InsertRows(biasValueMatrix, 0))
+
+	for i, theta := range thetas {
+		// Insert the bias unit, multiply with theta and apply the sigmoid function
+		curValues = theta.Mul(history[len(history)-1]).Apply(sigmoidMatrix)
+
+		if i != len(thetas)-1 {
+			history = append(history, curValues.InsertRows(biasValueMatrix, 0))
+		} else {
+			history = append(history, curValues)
+		}
+
+	}
+
+	return history
+}
+
 func DeltaTerms(thetas Parameters, trainingEx TrainingExample) Deltas {
 	deltas := make(Deltas, len(thetas))
 
@@ -82,10 +108,40 @@ func DeltaTerms(thetas Parameters, trainingEx TrainingExample) Deltas {
 		tmp, _ := matrix.Ones(levelPrediction.Rows(), 1).Sub(levelPrediction)
 		levelGradient := levelPrediction.Dot(tmp)
 
-		deltas[i] = workingTheta.Transpose().Mul(deltas[i+1]).Dot(levelGradient)
+		deltas[i] = workingTheta.Transpose().Mul(deltas[i+1]).Dot(levelGradient).RemoveRow(1)
 	}
 
 	return deltas
+}
+
+func BackProp(thetas Parameters, trainingSet []TrainingExample, lambda float64) []*matrix.Matrix {
+	// Make new BigDelta matrix
+	bigDeltas := make(Deltas, len(thetas))
+
+	for i, _ := range bigDeltas {
+		bigDeltas[i] = matrix.Zeros(thetas[i].Rows(), thetas[i].Columns())
+	}
+
+	// Make new gradient matrix
+	gradients := make([]*matrix.Matrix, len(thetas))
+
+	var activations []*matrix.Matrix
+	var deltaTerms Deltas
+
+	for _, trainingEx := range trainingSet {
+		activations = HypothesisHistory(thetas, trainingEx)
+		deltaTerms = DeltaTerms(thetas, trainingEx)
+
+		for i := 0; i < len(deltaTerms); i++ {
+			bigDeltas[i], _ = bigDeltas[i].Add(deltaTerms[i].Mul(activations[i].Transpose()))
+		}
+	}
+
+	for i, _ := range gradients {
+		gradients[i] = (bigDeltas[i].Add(thetas[i].Scale(lambda))).Scale(1 / float64(len(trainingSet)))
+	}
+
+	return gradients
 }
 
 // Helper functions
