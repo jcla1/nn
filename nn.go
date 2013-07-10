@@ -138,7 +138,7 @@ func BackProp(thetas Parameters, trainingSet []TrainingExample, lambda float64) 
 	}
 
 	for i, _ := range gradients {
-		gradients[i] = (bigDeltas[i].Add(thetas[i].Scale(lambda))).Scale(1 / float64(len(trainingSet)))
+		gradients[i] = (bigDeltas[i].Add((thetas[i].Mul(matrix.Eye(thetas[i].Cols()).Set(1, 1, 0))).Scale(lambda))).Scale(1 / float64(len(trainingSet)))
 	}
 
 	return gradients
