@@ -106,9 +106,9 @@ func DeltaTerms(thetas Parameters, trainingEx TrainingExample) Deltas {
 
 		levelPrediction := Hypothesis(thetas[:i+1], trainingEx).InsertRows(biasValueMatrix, 0)
 		tmp, _ := matrix.Ones(levelPrediction.Rows(), 1).Sub(levelPrediction)
-		levelGradient := levelPrediction.Dot(tmp)
+		levelGradient := levelPrediction.EWProd(tmp)
 
-		deltas[i] = workingTheta.Transpose().Mul(deltas[i+1]).Dot(levelGradient).RemoveRow(1)
+		deltas[i] = workingTheta.Transpose().Mul(deltas[i+1]).EWProd(levelGradient).RemoveRow(1)
 	}
 
 	return deltas
