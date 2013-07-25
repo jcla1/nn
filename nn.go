@@ -10,6 +10,10 @@ var (
 	_ = fmt.Println
 )
 
+const (
+	epsilon float64 = 0.0001
+)
+
 type TrainingExample struct {
 	Input, ExpectedOutput *matrix.Matrix
 }
@@ -49,7 +53,7 @@ func CostFunction(data []TrainingExample, thetas Parameters, lambda float64) flo
 		}
 	}
 
-	return cost/float64(len(data)) + (lambda/(2*float64(len(data))))*regularizationCost
+	return -cost/float64(len(data)) + (lambda/(2*float64(len(data))))*regularizationCost
 }
 
 func Hypothesis(thetas Parameters, trainingEx TrainingExample) *matrix.Matrix {
