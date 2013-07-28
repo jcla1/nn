@@ -1,17 +1,8 @@
 package nn
 
 import (
-	"fmt"
 	"github.com/jcla1/matrix"
 	"math"
-)
-
-var (
-	_ = fmt.Println
-)
-
-const (
-	epsilon float64 = 0.0001
 )
 
 type TrainingExample struct {
