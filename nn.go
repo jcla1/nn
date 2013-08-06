@@ -36,7 +36,7 @@ func CostFunction(data []TrainingExample, thetas Parameters, lambda float64) flo
 		for i, param := range theta.Values() {
 
 			// ignore theta0
-			if i%theta.Columns() == 0 {
+			if i%theta.C() == 0 {
 				continue
 			}
 
@@ -100,7 +100,7 @@ func DeltaTerms(thetas Parameters, trainingEx TrainingExample) Deltas {
 		workingTheta := thetas[i+1]
 
 		levelPrediction := Hypothesis(thetas[:i+1], trainingEx).InsertRows(biasValueMatrix, 0)
-		tmp, _ := matrix.Ones(levelPrediction.Rows(), 1).Sub(levelPrediction)
+		tmp, _ := matrix.Ones(levelPrediction.R(), 1).Sub(levelPrediction)
 		levelGradient := levelPrediction.EWProd(tmp)
 
 		deltas[i] = workingTheta.Transpose().Mul(deltas[i+1]).EWProd(levelGradient).RemoveRow(1)
@@ -114,7 +114,7 @@ func BackProp(thetas Parameters, trainingSet []TrainingExample, lambda float64) 
 	bigDeltas := make(Deltas, len(thetas))
 
 	for i, _ := range bigDeltas {
-		bigDeltas[i] = matrix.Zeros(thetas[i].Rows(), thetas[i].Columns())
+		bigDeltas[i] = matrix.Zeros(thetas[i].R(), thetas[i].C())
 	}
 
 	// Make new gradient matrix
@@ -133,7 +133,7 @@ func BackProp(thetas Parameters, trainingSet []TrainingExample, lambda float64) 
 	}
 
 	for i, _ := range gradients {
-		biasSanitizer := matrix.Eye(thetas[i].Columns())
+		biasSanitizer := matrix.Eye(thetas[i].C())
 		biasSanitizer.Set(1, 1, 0)
 
 		sanitizedTheta := thetas[i].Mul(biasSanitizer).Scale(lambda)
